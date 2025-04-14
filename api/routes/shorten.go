@@ -1,10 +1,12 @@
 package routes
 
 import (
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/praveent04/url-short/database"
 	"github.com/praveent04/url-short/helpers"
 	"github.com/redis/go-redis/v9"
@@ -21,7 +23,7 @@ type response struct {
 	CustomShort 	string			 `json:"short"`
 	Expiry      	time.Duration 	 `json:"expiry"`
 	XRateRemaining 	int 			 `json:"rate_limit"`
-	XRateLimitRest 	time.Duration 	 `json:"rate_limit_rest"`
+	XRateLimitReset 	time.Duration 	 `json:"rate_limit_reset"`
 }
 
 func ShortenURL(c *fiber.Ctx) error{
@@ -42,7 +44,7 @@ func ShortenURL(c *fiber.Ctx) error{
 		valInt, _ := strconv.Atoi(val)
 		if valInt <= 0{
 			limit,_ := r2.TTL(database.Ctx, c.IP()).Result()
-			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error":"Rate limit exceeded","rate_limit_rest": limit/ time.Nanosecond/time.Minute})
+			return c.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error":"Rate limit exceeded","rate_limit_reset": limit/ time.Nanosecond/time.Minute})
 		}
 	}
 
@@ -62,5 +64,48 @@ func ShortenURL(c *fiber.Ctx) error{
 
 	body.URL =  helpers.EnforceHTTP(body.URL)
 
+	var id string
+
+	if body.CustomShort == ""{
+		id = uuid.New().String()[:6]
+	}else{
+		id = body.CustomShort
+	}
+
+	r := database.CreateClient(0)
+	defer r.Close()
+
+	val,_ = r.Get(database.Ctx, id).Result()
+	if val != ""{
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "URL customshort is already used"})
+	}
+
+	if body.Expiry == 0{
+		body.Expiry = 24
+	}
+
+	err = r.Set(database.ctx, id, body.URL,body.Expiry*3600*time.Second).Err()
+
+	if err != nil{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error":"unable to connect to server",})
+	}
+
+	resp := response{
+		URL:				body.URL,
+		CustomShort:		"",
+		Expiry:				body.Expiry,
+		XRateRemaining:		10,
+		XRateLimitReset:	30,
+	}
+
 	r2.Decr(database.Ctx, c.IP())
+
+	val, _ = r3.Get(database.Ctx, c.IP().Result())
+	resp.RateRemaining, _ = strconv.Atoi(val)
+
+	ttl, _ := r2.TTL(database.Ctx,c.IP()).Result()
+	resp.XRateLimitReset = ttl/ time.Nanosecond/ time.Minute
+
+	resp.CustomShort = os.Getenv("DOMAIN") + "/" + id
+	return c.Status(fiber.StatusOK).JSON(resp) 
 }
