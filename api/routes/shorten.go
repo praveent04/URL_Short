@@ -1,10 +1,11 @@
 package routes
 
 import (
-	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/praveent04/url-short/database"
@@ -26,19 +27,20 @@ type response struct {
 	XRateLimitReset 	time.Duration 	 `json:"rate_limit_reset"`
 }
 
-func ShortenURL(c *fiber.Ctx) error{
+func ShortenURL(c fiber.Ctx) error{
 	body := new(request)
 	
-	if err := c.BodyParser(&body); err != nil{
+	if err := c.Bind().Body(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error":"cannot parse JSON"})
 	}
+	
 
 	//rate limiter
 	r2 := database.CreateClient(1)
 	defer r2.Close()
-	val, err := r2.Get(databaseCtx,c.IP()).Result()
+	val, err := r2.Get(database.Ctx,c.IP()).Result()
 	if err ==  redis.Nil{
-		_ = r2.Set(database.Ctx, c.IP, os.Getenv("API_QUOTA "), 30*60*time.Second).Err()
+		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA "), 30*60*time.Second).Err()
 	} else{
 		val, _ = r2.Get(database.Ctx,c.IP()).Result()
 		valInt, _ := strconv.Atoi(val)
@@ -84,7 +86,7 @@ func ShortenURL(c *fiber.Ctx) error{
 		body.Expiry = 24
 	}
 
-	err = r.Set(database.ctx, id, body.URL,body.Expiry*3600*time.Second).Err()
+	err = r.Set(database.Ctx, id, body.URL,body.Expiry*3600*time.Second).Err()
 
 	if err != nil{
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error":"unable to connect to server",})
@@ -100,8 +102,8 @@ func ShortenURL(c *fiber.Ctx) error{
 
 	r2.Decr(database.Ctx, c.IP())
 
-	val, _ = r3.Get(database.Ctx, c.IP().Result())
-	resp.RateRemaining, _ = strconv.Atoi(val)
+	val, _ = r2.Get(database.Ctx, c.IP()).Result()
+	resp.XRateRemaining, _ = strconv.Atoi(val)
 
 	ttl, _ := r2.TTL(database.Ctx,c.IP()).Result()
 	resp.XRateLimitReset = ttl/ time.Nanosecond/ time.Minute

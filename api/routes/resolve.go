@@ -7,7 +7,7 @@ import (
 )
 
 
-func ResolveURL(c *fiber.Ctx) error{
+func ResolveURL(c fiber.Ctx) error{
 	url := c.Params("url")
 
 	r:= database.CreateClient(0)
@@ -25,5 +25,7 @@ func ResolveURL(c *fiber.Ctx) error{
 
 	_ = rInr.Incr(database.Ctx, "counter")
 
-	return c.Redirect(value,301)
+	c.Redirect().To(value).Status(301)
+    return nil
+
 }
