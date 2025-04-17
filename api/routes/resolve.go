@@ -25,7 +25,6 @@ func ResolveURL(c fiber.Ctx) error{
 
 	_ = rInr.Incr(database.Ctx, "counter")
 
-	c.Redirect().To(value).Status(301)
-    return nil
+	return c.Redirect().Status(301).To(value)
 
 }
