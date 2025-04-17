@@ -16,17 +16,23 @@ A simple URL shortener service built with Go and Redis.
 - Redis (or Redis Cloud account)
 - Docker and Docker Compose (optional)
 
-## Environment Variables
+## Environment Setup
 
-Create a `.env` file in the root directory with the following variables:
+For security reasons, this project uses environment variables to store configuration settings. **Do not commit your actual .env file to version control.**
 
-```
-DOMAIN=localhost:3000
-DB_ADDR=your-redis-host
-DB_PORT=your-redis-port
-DB_PASS=your-redis-password
-DB_USER=your-redis-username
-```
+1. Copy the example environment file:
+   ```
+   cp .env.example .env
+   ```
+
+2. Update the `.env` file with your Redis credentials:
+   ```
+   DOMAIN=localhost:3000
+   DB_ADDR=your-redis-host
+   DB_PORT=your-redis-port
+   DB_PASS=your-redis-password
+   DB_USER=default
+   ```
 
 ## Running Locally
 
@@ -44,12 +50,16 @@ DB_USER=your-redis-username
 
 ## Running with Docker
 
-1. Build and start the containers:
+1. Ensure Docker Desktop is running
+
+2. Build and start the containers:
    ```
    docker-compose up -d
    ```
 
-2. The server will be accessible at http://localhost:3000.
+3. The server will be accessible at http://localhost:3000
+
+Note: The Docker Compose file is configured to use environment variables from your `.env` file. Make sure it's properly set up before running.
 
 ## API Endpoints
 
@@ -97,6 +107,14 @@ DB_USER=your-redis-username
     "original_url": "https://example.com"
   }
   ```
+
+## Docker Compose Troubleshooting
+
+If you encounter issues with Docker Compose:
+- Ensure Docker Desktop is running
+- Check that your `.env` file exists and has the correct format
+- If you see the error `unable to get image` or pipe errors, restart Docker Desktop
+- Make sure you're running the Docker commands from the project root directory
 
 ## License
 
