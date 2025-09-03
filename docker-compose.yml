@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DOMAIN=localhost:3000
+      # Redis (Cloud)
+      - DB_ADDR=redis-15215.c264.ap-south-1-1.ec2.redns.redis-cloud.com
+      - DB_PORT=15215
+      - DB_PASS=sYlrE16U34UgptoDaSF64lnzY6JNAoSD
+      - DB_USER=default
+      # PostgreSQL (NeonDB Cloud)
+      - DB_HOST_PG=ep-silent-sea-a19s4xcm-pooler.ap-southeast-1.aws.neon.tech
+      - DB_PORT_PG=5432
+      - DB_USER_PG=neondb_owner
+      - DB_PASS_PG=npg_uJnBPG6XapN1
+      - DB_NAME=neondb
+    restart: unless-stopped
