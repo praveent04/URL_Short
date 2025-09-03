@@ -1,36 +1,37 @@
-# Start from golang base image
-FROM golang:1.19-alpine as builder
+# Multi-stage build for URL Shortener
+# Stage 1: Build React Frontend
+FROM node:18-alpine as frontend-builder
 
-# Add Maintainer info
-LABEL maintainer="Praveen"
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci --only=production
+COPY frontend/ ./
+RUN npm run build
 
-# Set the current working directory inside the container
+# Stage 2: Build Go Backend
+FROM golang:1.21-alpine as backend-builder
+
 WORKDIR /app
-
-# Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download all dependencies
 RUN go mod download
-
-# Copy the source from the current directory to the working Directory inside the container
 COPY . .
-
-# Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-# Start a new stage from scratch
+# Stage 3: Final Production Image
 FROM alpine:latest
 
-# Set the working directory
+RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
-# Copy the binary from builder
-COPY --from=builder /app/main .
-COPY --from=builder /app/.env .
+# Copy backend binary
+COPY --from=backend-builder /app/main .
 
-# Expose port 3000 to the outside
+# Copy frontend build files
+COPY --from=frontend-builder /app/frontend/build ./frontend/build
+
+# Copy environment file (optional, better to use env vars in production)
+COPY .env .
+
 EXPOSE 3000
 
-# Command to run the executable
 CMD ["./main"]

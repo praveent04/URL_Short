@@ -98,6 +98,9 @@ func setupRoutes(app *fiber.App) {
 		})
 	})
 
+	// Serve static frontend files (for production deployment)
+	app.Static("/", "./frontend/build")
+
 	// Set up redirect route - must be last and should NOT have any middleware
 	app.Get("/:url", api.RedirectURL)
 }
