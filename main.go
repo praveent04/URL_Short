@@ -98,9 +98,6 @@ func setupRoutes(app *fiber.App) {
 		})
 	})
 
-	// Serve static frontend files (for production deployment)
-	app.Static("/", "./frontend/build")
-
 	// Set up redirect route - must be last and should NOT have any middleware
 	app.Get("/:url", api.RedirectURL)
 }
@@ -155,7 +152,7 @@ func main() {
 	// Middleware
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://ynit.com,http://ynit.com",
+		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://ynit.com,http://ynit.com,https://your-frontend.vercel.app",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
 		AllowCredentials: true,
