@@ -107,12 +107,15 @@ func setupRoutes(app *fiber.App) {
 
 func main() {
 	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		log.Printf("Error loading .env file: %v", err)
-		log.Printf("Continuing with system environment variables (normal for production)")
+	if _, err := os.Stat(".env"); err == nil {
+		// .env file exists, load it
+		if loadErr := godotenv.Load(); loadErr != nil {
+			log.Printf("Error loading .env file: %v", loadErr)
+		} else {
+			log.Printf("Successfully loaded .env file")
+		}
 	} else {
-		log.Printf("Successfully loaded .env file")
+		log.Printf("No .env file found, using system environment variables (normal for production)")
 	}
 
 	// Verify essential environment variables
