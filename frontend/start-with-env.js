@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
-// Load environment variables from root .env file
-require('dotenv').config({ path: '../.env' });
+// Load environment variables from root .env file (if it exists)
+try {
+  require('dotenv').config({ path: '../.env' });
+  console.log('Loaded environment variables from root .env file');
+} catch (error) {
+  console.log('No .env file found, using system environment variables (normal for production)');
+}
 
 // Set PORT from FRONTEND_PORT if available
 if (process.env.FRONTEND_PORT) {

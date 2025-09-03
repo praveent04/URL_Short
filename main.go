@@ -110,9 +110,19 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Error loading .env file: %v", err)
-		// Continue anyway, we might be using environment variables directly
+		log.Printf("Continuing with system environment variables (normal for production)")
 	} else {
 		log.Printf("Successfully loaded .env file")
+	}
+
+	// Verify essential environment variables
+	requiredVars := []string{"DB_ADDR", "DB_HOST_PG", "JWT_SECRET"}
+	for _, varName := range requiredVars {
+		if os.Getenv(varName) == "" {
+			log.Printf("Warning: Required environment variable %s is not set", varName)
+		} else {
+			log.Printf("Environment variable %s is configured", varName)
+		}
 	}
 
 	// Initialize Redis
