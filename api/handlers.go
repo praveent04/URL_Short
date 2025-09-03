@@ -12,9 +12,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/mssola/user_agent"
-	"golang.org/x/crypto/bcrypt"
 	"github.com/praveent04/URL_short/database"
 	"github.com/praveent04/URL_short/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Request model for shortening URLs
@@ -36,82 +36,82 @@ type response struct {
 
 // RedirectURL handles redirecting short URLs to their original destination
 func RedirectURL(c *fiber.Ctx) error {
-    // Get the short URL ID from the URL parameter
-    shortID := c.Params("url")
+	// Get the short URL ID from the URL parameter
+	shortID := c.Params("url")
 
-    // Add logging
-    fmt.Printf("Received redirect request for ID: '%s'\n", shortID)
+	// Add logging
+	fmt.Printf("Received redirect request for ID: '%s'\n", shortID)
 
-    // Get the original URL from Redis
-    original, err := database.GetOriginalURL(shortID)
-    if err != nil {
-        fmt.Printf("Error retrieving URL for %s: %v\n", shortID, err)
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": "Failed to retrieve URL",
-            "details": err.Error(),
-        })
-    }
+	// Get the original URL from Redis
+	original, err := database.GetOriginalURL(shortID)
+	if err != nil {
+		fmt.Printf("Error retrieving URL for %s: %v\n", shortID, err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to retrieve URL",
+			"details": err.Error(),
+		})
+	}
 
-    // If original URL is not found, return a 404
-    if original == "" {
-        fmt.Printf("URL not found for ID: '%s'\n", shortID)
-        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-            "error": "URL not found",
-        })
-    }
+	// If original URL is not found, return a 404
+	if original == "" {
+		fmt.Printf("URL not found for ID: '%s'\n", shortID)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "URL not found",
+		})
+	}
 
-    // Get URL metadata from PostgreSQL for analytics
-    urlModel, err := database.GetURLByShortCode(shortID)
-    if err != nil {
-        fmt.Printf("Error retrieving URL metadata for %s: %v\n", shortID, err)
-        // Continue with redirect even if metadata fetch fails
-    } else {
-        // Parse user agent
-        ua := user_agent.New(c.Get("User-Agent"))
-        browser, version := ua.Browser()
+	// Get URL metadata from PostgreSQL for analytics
+	urlModel, err := database.GetURLByShortCode(shortID)
+	if err != nil {
+		fmt.Printf("Error retrieving URL metadata for %s: %v\n", shortID, err)
+		// Continue with redirect even if metadata fetch fails
+	} else {
+		// Parse user agent
+		ua := user_agent.New(c.Get("User-Agent"))
+		browser, version := ua.Browser()
 
-        // Get IP address
-        ip := c.IP()
-        if ip == "" {
-            ip = c.Get("X-Forwarded-For")
-        }
-        if ip == "" {
-            ip = c.Get("X-Real-IP")
-        }
+		// Get IP address
+		ip := c.IP()
+		if ip == "" {
+			ip = c.Get("X-Forwarded-For")
+		}
+		if ip == "" {
+			ip = c.Get("X-Real-IP")
+		}
 
-        // Get location from IP
-        country, city := database.GetLocationFromIP(ip)
+		// Get location from IP
+		country, city := database.GetLocationFromIP(ip)
 
-        // Determine device type
-        deviceType := "desktop"
-        if ua.Mobile() {
-            deviceType = "mobile"
-        } else if ua.Bot() {
-            deviceType = "bot"
-        }
+		// Determine device type
+		deviceType := "desktop"
+		if ua.Mobile() {
+			deviceType = "mobile"
+		} else if ua.Bot() {
+			deviceType = "bot"
+		}
 
-        os := ua.OS()
+		os := ua.OS()
 
-        referrer := c.Get("Referer")
+		referrer := c.Get("Referer")
 
-        // Store click in database
-        err = database.StoreClick(urlModel.ID, ip, c.Get("User-Agent"), country, city, deviceType, browser+" "+version, os, referrer)
-        if err != nil {
-            fmt.Printf("Error storing click for %s: %v\n", shortID, err)
-            // Don't fail the redirect
-        }
-    }
+		// Store click in database
+		err = database.StoreClick(urlModel.ID, ip, c.Get("User-Agent"), country, city, deviceType, browser+" "+version, os, referrer)
+		if err != nil {
+			fmt.Printf("Error storing click for %s: %v\n", shortID, err)
+			// Don't fail the redirect
+		}
+	}
 
-    fmt.Printf("Successfully found URL. Redirecting '%s' to '%s'\n", shortID, original)
+	fmt.Printf("Successfully found URL. Redirecting '%s' to '%s'\n", shortID, original)
 
-    // Ensure the URL has a protocol
-    if !strings.HasPrefix(original, "http://") && !strings.HasPrefix(original, "https://") {
-        original = "http://" + original
-    }
+	// Ensure the URL has a protocol
+	if !strings.HasPrefix(original, "http://") && !strings.HasPrefix(original, "https://") {
+		original = "http://" + original
+	}
 
-    // Use 302 Found for redirects and set explicit Location header
-    c.Set("Location", original)
-    return c.SendStatus(fiber.StatusFound) // 302 Found
+	// Use 302 Found for redirects and set explicit Location header
+	c.Set("Location", original)
+	return c.SendStatus(fiber.StatusFound) // 302 Found
 }
 
 // CreateShortURL handles shortening of URLs
@@ -166,7 +166,7 @@ func CreateShortURL(c *fiber.Ctx) error {
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to store URL in database",
+			"error":   "Failed to store URL in database",
 			"details": err.Error(),
 		})
 	}
@@ -177,7 +177,7 @@ func CreateShortURL(c *fiber.Ctx) error {
 		// If Redis fails, delete from PG and return error
 		database.GetDB().Delete(urlModel)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to store URL in cache",
+			"error":   "Failed to store URL in cache",
 			"details": err.Error(),
 		})
 	}
@@ -216,142 +216,142 @@ func CreateShortURL(c *fiber.Ctx) error {
 
 // DebugURL provides a way to check what's stored in Redis for a given ID
 func DebugURL(c *fiber.Ctx) error {
-    shortID := c.Params("url")
-    
-    // Get the original URL from Redis
-    original, err := database.GetOriginalURL(shortID)
-    if err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": "Failed to retrieve URL",
-            "details": err.Error(),
-        })
-    }
+	shortID := c.Params("url")
 
-    if original == "" {
-        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-            "error": "URL not found for ID: " + shortID,
-        })
-    }
+	// Get the original URL from Redis
+	original, err := database.GetOriginalURL(shortID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to retrieve URL",
+			"details": err.Error(),
+		})
+	}
 
-    // Return the original URL as JSON for debugging
-    return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "id": shortID,
-        "original_url": original,
-    })
+	if original == "" {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "URL not found for ID: " + shortID,
+		})
+	}
+
+	// Return the original URL as JSON for debugging
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":           shortID,
+		"original_url": original,
+	})
 }
 
 // GetURLStats returns statistics for a specific URL
 func GetURLStats(c *fiber.Ctx) error {
-    shortID := c.Params("url")
-    log.Printf("GetURLStats: Request for short code: %s", shortID)
+	shortID := c.Params("url")
+	log.Printf("GetURLStats: Request for short code: %s", shortID)
 
-    // Get URL from database
-    urlModel, err := database.GetURLByShortCode(shortID)
-    if err != nil {
-        log.Printf("GetURLStats: URL not found for short code: %s, error: %v", shortID, err)
-        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-            "error": "URL not found",
-        })
-    }
+	// Get URL from database
+	urlModel, err := database.GetURLByShortCode(shortID)
+	if err != nil {
+		log.Printf("GetURLStats: URL not found for short code: %s, error: %v", shortID, err)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "URL not found",
+		})
+	}
 
-    log.Printf("GetURLStats: Found URL with ID: %d", urlModel.ID)
+	log.Printf("GetURLStats: Found URL with ID: %d", urlModel.ID)
 
-    // Get click count
-    var clickCount int64
-    database.GetDB().Model(&models.Click{}).Where("url_id = ?", urlModel.ID).Count(&clickCount)
+	// Get click count
+	var clickCount int64
+	database.GetDB().Model(&models.Click{}).Where("url_id = ?", urlModel.ID).Count(&clickCount)
 
-    // Get clicks by date (last 30 days)
-    var clicksByDate []struct {
-        Date  string `json:"date"`
-        Count int64  `json:"count"`
-    }
-    database.GetDB().Model(&models.Click{}).
-        Select("DATE(timestamp) as date, COUNT(*) as count").
-        Where("url_id = ? AND timestamp >= ?", urlModel.ID, time.Now().AddDate(0, 0, -30)).
-        Group("DATE(timestamp)").
-        Order("date DESC").
-        Scan(&clicksByDate)
+	// Get clicks by date (last 30 days)
+	var clicksByDate []struct {
+		Date  string `json:"date"`
+		Count int64  `json:"count"`
+	}
+	database.GetDB().Model(&models.Click{}).
+		Select("DATE(timestamp) as date, COUNT(*) as count").
+		Where("url_id = ? AND timestamp >= ?", urlModel.ID, time.Now().AddDate(0, 0, -30)).
+		Group("DATE(timestamp)").
+		Order("date DESC").
+		Scan(&clicksByDate)
 
-    // Get top countries
-    var topCountries []struct {
-        Country string `json:"country"`
-        Count   int64  `json:"count"`
-    }
-    database.GetDB().Model(&models.Click{}).
-        Select("country, COUNT(*) as count").
-        Where("url_id = ? AND country != ''", urlModel.ID).
-        Group("country").
-        Order("count DESC").
-        Limit(10).
-        Scan(&topCountries)
+	// Get top countries
+	var topCountries []struct {
+		Country string `json:"country"`
+		Count   int64  `json:"count"`
+	}
+	database.GetDB().Model(&models.Click{}).
+		Select("country, COUNT(*) as count").
+		Where("url_id = ? AND country != ''", urlModel.ID).
+		Group("country").
+		Order("count DESC").
+		Limit(10).
+		Scan(&topCountries)
 
-    // Get device types
-    var deviceStats []struct {
-        DeviceType string `json:"device_type"`
-        Count      int64  `json:"count"`
-    }
-    database.GetDB().Model(&models.Click{}).
-        Select("device_type, COUNT(*) as count").
-        Where("url_id = ?", urlModel.ID).
-        Group("device_type").
-        Scan(&deviceStats)
+	// Get device types
+	var deviceStats []struct {
+		DeviceType string `json:"device_type"`
+		Count      int64  `json:"count"`
+	}
+	database.GetDB().Model(&models.Click{}).
+		Select("device_type, COUNT(*) as count").
+		Where("url_id = ?", urlModel.ID).
+		Group("device_type").
+		Scan(&deviceStats)
 
-    return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "url": fiber.Map{
-            "id":          urlModel.ID,
-            "short_code":  urlModel.ShortCode,
-            "original_url": urlModel.OriginalURL,
-            "created_at":  urlModel.CreatedAt,
-            "expires_at":  urlModel.ExpiresAt,
-        },
-        "stats": fiber.Map{
-            "total_clicks":   clickCount,
-            "clicks_by_date": clicksByDate,
-            "top_countries":  topCountries,
-            "device_stats":   deviceStats,
-        },
-    })
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"url": fiber.Map{
+			"id":           urlModel.ID,
+			"short_code":   urlModel.ShortCode,
+			"original_url": urlModel.OriginalURL,
+			"created_at":   urlModel.CreatedAt,
+			"expires_at":   urlModel.ExpiresAt,
+		},
+		"stats": fiber.Map{
+			"total_clicks":   clickCount,
+			"clicks_by_date": clicksByDate,
+			"top_countries":  topCountries,
+			"device_stats":   deviceStats,
+		},
+	})
 }
 
 // GetUserURLs returns all URLs for a user
 func GetUserURLs(c *fiber.Ctx) error {
-    userID := c.Locals("user_id").(uint)
+	userID := c.Locals("user_id").(uint)
 
-    var urls []models.URL
-    database.GetDB().Where("user_id = ?", userID).Find(&urls)
+	var urls []models.URL
+	database.GetDB().Where("user_id = ?", userID).Find(&urls)
 
-    // Convert to frontend-friendly format
-    var formattedUrls []fiber.Map
-    domain := os.Getenv("DOMAIN")
-    if domain == "" {
-        domain = "https://short-it.com"
-    }
+	// Convert to frontend-friendly format
+	var formattedUrls []fiber.Map
+	domain := os.Getenv("DOMAIN")
+	if domain == "" {
+		domain = "https://ynit.com"
+	}
 
-    // Make sure domain has protocol
-    if !strings.HasPrefix(domain, "http") {
-        // Use HTTPS for production, HTTP for localhost
-        if strings.Contains(domain, "localhost") {
-            domain = "http://" + domain
-        } else {
-            domain = "https://" + domain
-        }
-    }
+	// Make sure domain has protocol
+	if !strings.HasPrefix(domain, "http") {
+		// Use HTTPS for production, HTTP for localhost
+		if strings.Contains(domain, "localhost") {
+			domain = "http://" + domain
+		} else {
+			domain = "https://" + domain
+		}
+	}
 
-    for _, url := range urls {
-        formattedUrls = append(formattedUrls, fiber.Map{
-            "id":           url.ID,
-            "short_code":   url.ShortCode,
-            "original_url": url.OriginalURL,
-            "short_url":    fmt.Sprintf("%s/%s", domain, url.ShortCode),
-            "expiry":       url.ExpiryHours,
-            "created_at":   url.CreatedAt,
-            "expires_at":   url.ExpiresAt,
-        })
-    }
+	for _, url := range urls {
+		formattedUrls = append(formattedUrls, fiber.Map{
+			"id":           url.ID,
+			"short_code":   url.ShortCode,
+			"original_url": url.OriginalURL,
+			"short_url":    fmt.Sprintf("%s/%s", domain, url.ShortCode),
+			"expiry":       url.ExpiryHours,
+			"created_at":   url.CreatedAt,
+			"expires_at":   url.ExpiresAt,
+		})
+	}
 
-    return c.Status(fiber.StatusOK).JSON(fiber.Map{
-        "urls": formattedUrls,
-    })
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"urls": formattedUrls,
+	})
 }
 
 // JWTClaims represents JWT claims
@@ -473,7 +473,7 @@ func SendExpirationNotifications(c *fiber.Ctx) error {
 	err := database.SendExpirationNotifications()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to send expiration notifications",
+			"error":   "Failed to send expiration notifications",
 			"details": err.Error(),
 		})
 	}

@@ -146,14 +146,14 @@ const Dashboard = ({ user, onLogout }) => {
                         <div className="url-short">
                           <strong>Short URL:</strong>
                           <a
-                            href={`https://short-it.com/${url.short_code}`}
+                            href={`https://ynit.com/${url.short_code}`}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            short-it.com/{url.short_code}
+                            ynit.com/{url.short_code}
                           </a>
                           <button
-                            onClick={() => copyToClipboard(`https://short-it.com/${url.short_code}`)}
+                            onClick={() => copyToClipboard(`https://ynit.com/${url.short_code}`)}
                             className="copy-button"
                           >
                             Copy
@@ -170,7 +170,7 @@ const Dashboard = ({ user, onLogout }) => {
                       </div>
                       <div className="url-actions">
                         <button
-                          onClick={() => openQrModal(`https://short-it.com/${url.short_code}`, url.short_code)}
+                          onClick={() => openQrModal(`https://ynit.com/${url.short_code}`, url.short_code)}
                           className="action-button qr-button"
                           title="Generate QR Code"
                         >

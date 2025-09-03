@@ -212,7 +212,7 @@ Please create a new shortened URL if you need to keep this link active.
 
 Best regards,
 URL Shortener Team
-	`, userName, getEnv("DOMAIN", "short-it.com"), shortCode, originalURL, expiresAt.Format("2006-01-02 15:04:05"))
+	`, userName, getEnv("DOMAIN", "ynit.com"), shortCode, originalURL, expiresAt.Format("2006-01-02 15:04:05"))
 
 	m.SetBody("text/plain", body)
 
