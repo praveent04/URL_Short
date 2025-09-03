@@ -198,26 +198,57 @@
 .url-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.stats-button {
-  padding: 0.6rem 1.2rem;
-  background: #007bff;
-  color: white;
+.action-button {
+  padding: 0.5rem 0.8rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.copy-button {
+  background: #28a745;
+  color: white;
+}
+
+.copy-button:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.qr-button {
+  background: #6f42c1;
+  color: white;
+}
+
+.qr-button:hover {
+  background: #5a359a;
+  transform: translateY(-1px);
+}
+
+.stats-button {
+  background: #007bff;
+  color: white;
 }
 
 .stats-button:hover:not(:disabled) {
   background: #0056b3;
+  transform: translateY(-1px);
 }
 
 .stats-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .stats-overview {

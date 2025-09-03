@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import UrlShortener from './UrlShortener';
+import QRCodeModal from './QRCodeModal';
 import './Dashboard.css';
 
 const Dashboard = ({ user, onLogout }) => {
   const [urls, setUrls] = useState([]);
-  const [selectedUrl, setSelectedUrl] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState({}); // Track loading per URL
   const [activeTab, setActiveTab] = useState('urls');
+  const [qrModal, setQrModal] = useState(null); // { url, shortCode } or null
 
   useEffect(() => {
     loadUserUrls();
@@ -27,20 +28,35 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const handleUrlCreated = (newUrl) => {
-    setUrls([newUrl, ...urls]);
+    console.log('New URL created:', newUrl);
+    console.log('Current URLs before update:', urls);
+    const updatedUrls = [newUrl, ...urls];
+    console.log('Updated URLs:', updatedUrls);
+    setUrls(updatedUrls);
   };
 
   const loadUrlStats = async (shortCode) => {
-    setStatsLoading(true);
+    console.log('Loading stats for short code:', shortCode);
+    setStatsLoading(prev => ({ ...prev, [shortCode]: true }));
     try {
       const response = await api.getUrlStats(shortCode);
+      console.log('Stats response:', response);
       setStats(response);
-      setSelectedUrl(shortCode);
+      setActiveTab('stats'); // Switch to stats tab
     } catch (error) {
       console.error('Failed to load stats:', error);
+      alert('Failed to load statistics: ' + error.message);
     } finally {
-      setStatsLoading(false);
+      setStatsLoading(prev => ({ ...prev, [shortCode]: false }));
     }
+  };
+
+  const openQrModal = (url, shortCode) => {
+    setQrModal({ url, shortCode });
+  };
+
+  const closeQrModal = () => {
+    setQrModal(null);
   };
 
   const copyToClipboard = async (text) => {
@@ -154,11 +170,19 @@ const Dashboard = ({ user, onLogout }) => {
                       </div>
                       <div className="url-actions">
                         <button
-                          onClick={() => loadUrlStats(url.short_code)}
-                          className="stats-button"
-                          disabled={statsLoading}
+                          onClick={() => openQrModal(`http://localhost:3000/${url.short_code}`, url.short_code)}
+                          className="action-button qr-button"
+                          title="Generate QR Code"
                         >
-                          {statsLoading ? 'Loading...' : 'View Stats'}
+                          📱 QR Code
+                        </button>
+                        <button
+                          onClick={() => loadUrlStats(url.short_code)}
+                          className="action-button stats-button"
+                          disabled={statsLoading[url.short_code]}
+                          title="View Statistics"
+                        >
+                          {statsLoading[url.short_code] ? 'Loading...' : '📊 Stats'}
                         </button>
                       </div>
                     </div>
@@ -253,6 +277,14 @@ const Dashboard = ({ user, onLogout }) => {
           )}
         </div>
       </div>
+
+      {qrModal && (
+        <QRCodeModal
+          url={qrModal.url}
+          shortCode={qrModal.shortCode}
+          onClose={closeQrModal}
+        />
+      )}
     </div>
   );
 };
