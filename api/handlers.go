@@ -187,22 +187,26 @@ func CreateShortURL(c *fiber.Ctx) error {
 	if domain == "" {
 		domain = c.Hostname()
 	}
-	
+
 	// Make sure domain has protocol
 	if !strings.HasPrefix(domain, "http") {
 		domain = "http://" + domain
 	}
-	
-	resp := response{
-		URL:         body.URL,
-		CustomShort: id,
-		Expiry:      body.Expiry,
-		XRateLimit:  10,
-		XRateReset:  30,
-		ShortURL:    fmt.Sprintf("%s/%s", domain, id),
-	}
 
-	return c.Status(fiber.StatusOK).JSON(resp)
+	// Return response with all the fields the frontend expects
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"id":           urlModel.ID,
+		"short_code":   urlModel.ShortCode,
+		"original_url": urlModel.OriginalURL,
+		"short_url":    fmt.Sprintf("%s/%s", domain, urlModel.ShortCode),
+		"expiry":       urlModel.ExpiryHours,
+		"created_at":   urlModel.CreatedAt,
+		"expires_at":   urlModel.ExpiresAt,
+		"url":          body.URL, // Keep for backward compatibility
+		"custom_short": id,       // Keep for backward compatibility
+		"rate_limit":   10,
+		"rate_reset":   30,
+	})
 }
 
 // DebugURL provides a way to check what's stored in Redis for a given ID
@@ -234,14 +238,18 @@ func DebugURL(c *fiber.Ctx) error {
 // GetURLStats returns statistics for a specific URL
 func GetURLStats(c *fiber.Ctx) error {
     shortID := c.Params("url")
+    log.Printf("GetURLStats: Request for short code: %s", shortID)
 
     // Get URL from database
     urlModel, err := database.GetURLByShortCode(shortID)
     if err != nil {
+        log.Printf("GetURLStats: URL not found for short code: %s, error: %v", shortID, err)
         return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
             "error": "URL not found",
         })
     }
+
+    log.Printf("GetURLStats: Found URL with ID: %d", urlModel.ID)
 
     // Get click count
     var clickCount int64

@@ -26,7 +26,7 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
     setSuccess('');
 
     try {
-      const response = await api.register(formData);
+      await api.register(formData);
       setSuccess('Registration successful! Please login.');
       setTimeout(() => {
         onSwitchToLogin();

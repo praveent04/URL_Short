@@ -14,14 +14,34 @@ function App() {
     // Check if user is already logged in
     const token = api.getToken();
     if (token) {
-      // Validate the token with backend
+      // First try to get user info from localStorage
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        try {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing saved user data:', error);
+        }
+      }
+
+      // If no saved user data, validate token with backend
       api.testAuth()
         .then((response) => {
-          setUser({ name: 'User', id: response.user_id, email: response.user_email });
+          const userData = {
+            id: response.user_id,
+            email: response.user_email,
+            name: response.user_email.split('@')[0] // Use email prefix as name
+          };
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         })
         .catch((error) => {
           console.error('Token validation failed:', error);
           api.removeToken();
+          localStorage.removeItem('user');
           setUser(null);
         })
         .finally(() => {
@@ -33,15 +53,28 @@ function App() {
   }, []);
 
   const handleLogin = (userData) => {
-    setUser(userData);
+    const userInfo = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name || userData.email.split('@')[0]
+    };
+    setUser(userInfo);
+    localStorage.setItem('user', JSON.stringify(userInfo));
   };
 
   const handleRegister = (userData) => {
-    setUser(userData);
+    const userInfo = {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name || userData.email.split('@')[0]
+    };
+    setUser(userInfo);
+    localStorage.setItem('user', JSON.stringify(userInfo));
   };
 
   const handleLogout = () => {
     api.logout();
+    localStorage.removeItem('user');
     setUser(null);
     setAuthMode('login');
   };

@@ -28,7 +28,9 @@ const UrlShortener = ({ onUrlCreated }) => {
 
     try {
       const dataToSend = { ...formData, expiry: parseInt(formData.expiry, 10) };
+      console.log('Sending URL shortening request:', dataToSend);
       const response = await api.shortenUrl(dataToSend);
+      console.log('URL shortening response:', response);
       setSuccess(response);
       setFormData({
         url: '',
@@ -36,9 +38,11 @@ const UrlShortener = ({ onUrlCreated }) => {
         expiry: 24,
       });
       if (onUrlCreated) {
+        console.log('Calling onUrlCreated with:', response);
         onUrlCreated(response);
       }
     } catch (err) {
+      console.error('URL shortening error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
