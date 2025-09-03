@@ -190,7 +190,12 @@ func CreateShortURL(c *fiber.Ctx) error {
 
 	// Make sure domain has protocol
 	if !strings.HasPrefix(domain, "http") {
-		domain = "http://" + domain
+		// Use HTTPS for production, HTTP for localhost
+		if strings.Contains(domain, "localhost") {
+			domain = "http://" + domain
+		} else {
+			domain = "https://" + domain
+		}
 	}
 
 	// Return response with all the fields the frontend expects
@@ -319,7 +324,17 @@ func GetUserURLs(c *fiber.Ctx) error {
     var formattedUrls []fiber.Map
     domain := os.Getenv("DOMAIN")
     if domain == "" {
-        domain = "http://localhost:3000"
+        domain = "https://short-it.com"
+    }
+
+    // Make sure domain has protocol
+    if !strings.HasPrefix(domain, "http") {
+        // Use HTTPS for production, HTTP for localhost
+        if strings.Contains(domain, "localhost") {
+            domain = "http://" + domain
+        } else {
+            domain = "https://" + domain
+        }
     }
 
     for _, url := range urls {

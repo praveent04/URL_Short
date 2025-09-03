@@ -50,17 +50,17 @@ func InitRedis() error {
 	if err != nil {
 		return fmt.Errorf("failed to parse Redis URL: %w", err)
 	}
-	
+
 	client = redis.NewClient(opt)
 
 	// Test the connection with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := client.Ping(ctx).Err(); err != nil {
 		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
-	
+
 	log.Printf("Successfully connected to Redis at %s:%s", redisHost, redisPort)
 	return nil
 }
@@ -212,7 +212,7 @@ Please create a new shortened URL if you need to keep this link active.
 
 Best regards,
 URL Shortener Team
-	`, userName, getEnv("DOMAIN", "localhost:3000"), shortCode, originalURL, expiresAt.Format("2006-01-02 15:04:05"))
+	`, userName, getEnv("DOMAIN", "short-it.com"), shortCode, originalURL, expiresAt.Format("2006-01-02 15:04:05"))
 
 	m.SetBody("text/plain", body)
 
@@ -303,7 +303,7 @@ func StoreURL(id, url string, exp uint) error {
 	if err != nil {
 		return fmt.Errorf("redis error verifying storage: %w", err)
 	}
-	
+
 	log.Printf("Verified storage: ID='%s', StoredURL='%s'", id, storedURL)
 	return nil
 }

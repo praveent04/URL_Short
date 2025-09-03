@@ -83,8 +83,8 @@ func setupRoutes(app *fiber.App) {
 	// Protected routes
 	protected := app.Group("/api/v1", JWTMiddleware())
 	protected.Post("/shorten", api.CreateShortURL)
-	protected.Get("/urls", api.GetUserURLs) // Get user URLs
-	protected.Get("/stats/:url", api.GetURLStats) // Get URL statistics
+	protected.Get("/urls", api.GetUserURLs)                                // Get user URLs
+	protected.Get("/stats/:url", api.GetURLStats)                          // Get URL statistics
 	protected.Post("/notifications/send", api.SendExpirationNotifications) // Send expiration notifications
 
 	// Test protected route
@@ -92,8 +92,8 @@ func setupRoutes(app *fiber.App) {
 		userID := c.Locals("user_id")
 		userEmail := c.Locals("user_email")
 		return c.Status(200).JSON(fiber.Map{
-			"message": "JWT is working!",
-			"user_id": userID,
+			"message":    "JWT is working!",
+			"user_id":    userID,
 			"user_email": userEmail,
 		})
 	})
@@ -139,7 +139,7 @@ func main() {
 	// Middleware
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001",
+		AllowOrigins:     "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001,https://short-it.com,http://short-it.com",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
 		AllowCredentials: true,
